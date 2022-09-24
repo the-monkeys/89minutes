@@ -2,7 +2,9 @@ syntax = "proto3";
 
 option go_package=".;pb";
 
-message Comment {
+import "google/protobuf/timestamp.proto";
+
+message CommentCreateRequest {
     // UUID
     string id =1;
     // Story UUID
@@ -13,4 +15,9 @@ message Comment {
     string commentator = 4;
     // Create time
     google.protobuf.Timestamp createTime = 8;
+}
+
+message CommentCreateResponse{
+    // UUID
+    string id = 1;
 }

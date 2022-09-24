@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package=".;pb";
 
+import "google/protobuf/timestamp.proto";
+
 message StoryCreateRequest {
     // UUID
     string id = 1;
@@ -11,8 +13,8 @@ message StoryCreateRequest {
     string textContent = 3;
     // Story can have multiple images and videos 
     oneof data {
-        ImageInfo info = 1;
-        bytes chunk_data = 2;
+        ImageInfo info = 4;
+        bytes chunk_data = 10;
     }
     // Story can have formatted texts, like code
     repeated string formattedText = 5;
