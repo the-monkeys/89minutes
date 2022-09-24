@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package=".;pb";
+
+message Comment {
+    // UUID
+    string id =1;
+    // Story UUID
+    string storyId = 2;
+    // comment content 
+    string textContent = 3;
+    // Commented by
+    string commentator = 4;
+    // Create time
+    google.protobuf.Timestamp createTime = 8;
+}

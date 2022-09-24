@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package=".;pb";
+
+message StoryCreateRequest {
+    // UUID
+    string id = 1;
+    // Title of the story
+    string title = 2;
+    // Text contents 
+    string textContent = 3;
+    // Story can have multiple images and videos 
+    oneof data {
+        ImageInfo info = 1;
+        bytes chunk_data = 2;
+    }
+    // Story can have formatted texts, like code
+    repeated string formattedText = 5;
+    // Name of the author
+    string WrittenBy = 6;
+    // Is the story draft and not published
+    bool isDraft = 7;
+    // Create time
+    google.protobuf.Timestamp createTime = 8;
+    // Update time
+    google.protobuf.Timestamp updateTime = 9;
+};
+
+message ImageInfo {
+    string laptop_id = 1;
+    string image_type = 2;
+}
+
+message StoryCreateResponse{
+    // UUID
+    string id = 1;
+}
