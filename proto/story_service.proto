@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package=".;pb";
+
+import "story_message.proto";
+
+message CreateStoryRequest{
+    Story story = 1;
+}
+
+message CreateStoryResponse {
+    string id = 1;
+}
+
+service StoryService {
+    rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
+
+    }
+}

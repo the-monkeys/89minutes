@@ -4,7 +4,8 @@ option go_package=".;pb";
 
 import "google/protobuf/timestamp.proto";
 
-message StoryCreateRequest {
+
+message Story {
     // UUID
     string id = 1;
     // Title of the story
@@ -12,10 +13,7 @@ message StoryCreateRequest {
     // Text contents 
     string textContent = 3;
     // Story can have multiple images and videos 
-    oneof data {
-        ImageInfo info = 4;
-        bytes chunk_data = 10;
-    }
+    repeated bytes fileContent = 4;
     // Story can have formatted texts, like code
     repeated string formattedText = 5;
     // Name of the author
@@ -27,13 +25,3 @@ message StoryCreateRequest {
     // Update time
     google.protobuf.Timestamp updateTime = 9;
 };
-
-message ImageInfo {
-    string laptop_id = 1;
-    string image_type = 2;
-}
-
-message StoryCreateResponse{
-    // UUID
-    string id = 1;
-}
