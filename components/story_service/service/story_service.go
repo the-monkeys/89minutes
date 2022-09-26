@@ -46,5 +46,8 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 
 	// Save the Story
 
-	return nil, nil
+	resp := &pb.CreateStoryResponse{
+		Id: story.Id,
+	}
+	return resp, nil
 }
