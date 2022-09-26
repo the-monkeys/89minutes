@@ -53,3 +53,7 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 	}
 	return resp, nil
 }
+
+func (server *StoryService) Update(context.Context, *pb.UpdateStoryRequest) (*pb.UpdateStoryResponse, error) {
+	return nil, nil
+}

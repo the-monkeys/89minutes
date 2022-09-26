@@ -20,8 +20,45 @@ message Story {
     string WrittenBy = 6;
     // Is the story draft and not published
     bool isDraft = 7;
+    // Tags for categorizing stories
+    repeated Tag Tag = 8;
     // Create time
-    google.protobuf.Timestamp createTime = 8;
+    google.protobuf.Timestamp createTime = 9;
+    // Update time
+    google.protobuf.Timestamp updateTime = 10;
+};
+
+message StoryGetRequest{}
+
+message StoryGetResponse {
+    // Story will be streamed
+    Story top = 1;
+}
+
+message Tag {
+    string id = 1;
+    string tagName = 2;
+    string tagVal = 3;
+}
+
+
+message UpdateStoryRequest {
+    // UUID
+    string id = 1;
+    // Title of the story
+    string title = 2;
+    // Text contents 
+    string textContent = 3;
     // Update time
     google.protobuf.Timestamp updateTime = 9;
-};
+}
+
+message UpdateStoryResponse {
+    // UUID
+    string id = 1;
+}
+
+message StoryDelete {
+    // UUID
+    string id = 1;
+}

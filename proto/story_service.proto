@@ -16,4 +16,8 @@ service StoryService {
     rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
 
     }
+
+    rpc Update(UpdateStoryRequest) returns (UpdateStoryResponse) {
+
+    }
 }
