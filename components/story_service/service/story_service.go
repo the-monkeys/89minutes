@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type StoryService struct {
@@ -28,15 +29,15 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 		_, err := uuid.Parse(story.Id)
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "story id is not a valid UUID: %v", err)
-		} else {
-			// Else assign a valid UUID
-			id, err := uuid.NewRandom()
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "cannot generate a new laptop id: %v", err)
-			}
-
-			story.Id = id.String()
 		}
+	} else {
+		// Else assign a valid UUID
+		newUUID, err := uuid.NewRandom()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "cannot generate a new laptop id: %v", err)
+		}
+
+		story.Id = newUUID.String()
 	}
 
 	// Check for the context error
@@ -44,6 +45,7 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 		return nil, err
 	}
 
+	story.CreateTime = timestamppb.Now()
 	// Save the Story
 
 	resp := &pb.CreateStoryResponse{
