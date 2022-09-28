@@ -62,3 +62,11 @@ message StoryDelete {
     // UUID
     string id = 1;
 }
+
+
+message GetLatestStoryRequest {
+}
+
+message GetLatestStoryResponse {
+    Story story = 1;
+}

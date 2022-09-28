@@ -15,9 +15,13 @@ message CreateStoryResponse {
 service StoryService {
     rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
 
-    }
+    };
+
+    rpc GetLatest(GetLatestStoryRequest) returns (stream GetLatestStoryResponse){
+
+    };
 
     rpc Update(UpdateStoryRequest) returns (UpdateStoryResponse) {
 
-    }
+    };
 }

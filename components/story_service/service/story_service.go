@@ -57,3 +57,29 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 func (server *StoryService) Update(context.Context, *pb.UpdateStoryRequest) (*pb.UpdateStoryResponse, error) {
 	return nil, nil
 }
+
+func (server *StoryService) GetLatest(req *pb.GetLatestStoryRequest, stream pb.StoryService_GetLatestServer) error {
+	// filter := req.GetFilter()
+	// log.Printf("receive a search-laptop request with filter: %v", filter)
+
+	// err := server.laptopStore.Search(
+	// 	stream.Context(),
+	// 	filter,
+	// 	func(laptop *pb.Laptop) error {
+	// 		res := &pb.SearchLaptopResponse{Laptop: laptop}
+	// 		err := stream.Send(res)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+
+	// 		log.Printf("sent laptop with id: %s", laptop.GetId())
+	// 		return nil
+	// 	},
+	// )
+
+	// if err != nil {
+	// 	return status.Errorf(codes.Internal, "unexpected error: %v", err)
+	// }
+
+	return nil
+}
