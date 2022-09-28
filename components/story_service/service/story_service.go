@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/89minutes/89minutes/pb"
 	"github.com/google/uuid"
@@ -59,27 +62,32 @@ func (server *StoryService) Update(context.Context, *pb.UpdateStoryRequest) (*pb
 }
 
 func (server *StoryService) GetLatest(req *pb.GetLatestStoryRequest, stream pb.StoryService_GetLatestServer) error {
-	// filter := req.GetFilter()
-	// log.Printf("receive a search-laptop request with filter: %v", filter)
+	log.Printf("receive a request to share latest reports")
 
-	// err := server.laptopStore.Search(
-	// 	stream.Context(),
-	// 	filter,
-	// 	func(laptop *pb.Laptop) error {
-	// 		res := &pb.SearchLaptopResponse{Laptop: laptop}
-	// 		err := stream.Send(res)
-	// 		if err != nil {
-	// 			return err
-	// 		}
+	//use wait group to allow process to be concurrent
+	var wg sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(count int) {
+			defer wg.Done()
 
-	// 		log.Printf("sent laptop with id: %s", laptop.GetId())
-	// 		return nil
-	// 	},
-	// )
+			//time sleep to simulate server process time
+			time.Sleep(time.Duration(count) * time.Second)
+			resp := pb.GetLatestStoryResponse{
+				Story: &pb.Story{
+					Id:    uuid.New().String(),
+					Title: fmt.Sprintf("A New Article %d", count),
+				},
+			}
 
-	// if err != nil {
-	// 	return status.Errorf(codes.Internal, "unexpected error: %v", err)
-	// }
+			if err := stream.Send(&resp); err != nil {
+				log.Printf("send error %v", err)
 
+			}
+			log.Printf("finishing request number : %d", count)
+		}(i)
+	}
+
+	wg.Wait()
 	return nil
 }
