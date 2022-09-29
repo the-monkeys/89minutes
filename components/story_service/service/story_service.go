@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/89minutes/89minutes/pb"
 	"github.com/google/uuid"
@@ -64,15 +63,12 @@ func (server *StoryService) Update(context.Context, *pb.UpdateStoryRequest) (*pb
 func (server *StoryService) GetLatest(req *pb.GetLatestStoryRequest, stream pb.StoryService_GetLatestServer) error {
 	log.Printf("receive a request to share latest reports")
 
-	//use wait group to allow process to be concurrent
 	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
+	for i := 0; i < noOfLatestStories; i++ {
 		wg.Add(1)
 		go func(count int) {
 			defer wg.Done()
 
-			//time sleep to simulate server process time
-			time.Sleep(time.Duration(count) * time.Second)
 			resp := pb.GetLatestStoryResponse{
 				Story: &pb.Story{
 					Id:    uuid.New().String(),
