@@ -48,7 +48,8 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 	}
 
 	story.CreateTime = timestamppb.Now()
-	// Save the Story
+
+	// TODO: Save the Story
 
 	resp := &pb.CreateStoryResponse{
 		Id: story.Id,
@@ -56,8 +57,23 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 	return resp, nil
 }
 
-func (server *StoryService) Update(context.Context, *pb.UpdateStoryRequest) (*pb.UpdateStoryResponse, error) {
-	return nil, nil
+func (server *StoryService) Update(ctx context.Context, req *pb.UpdateStoryRequest) (*pb.UpdateStoryResponse, error) {
+	id := req.GetId()
+	title := req.GetTitle()
+	textContent := req.GetTextContent()
+	updateTime := timestamppb.Now()
+
+	log.Printf("Updating story %s, titled: %s", id, title)
+
+	// TODO: Check if the story exits
+
+	// TODO: Update the story
+	_, _ = textContent, updateTime
+
+	resp := &pb.UpdateStoryResponse{
+		Id: id,
+	}
+	return resp, nil
 }
 
 func (server *StoryService) GetLatest(req *pb.GetLatestStoryRequest, stream pb.StoryService_GetLatestServer) error {
