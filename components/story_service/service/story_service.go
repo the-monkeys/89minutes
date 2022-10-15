@@ -2,22 +2,27 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync"
 
 	"github.com/89minutes/89minutes/pb"
 	"github.com/google/uuid"
+	"github.com/opensearch-project/opensearch-go"
+	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type StoryService struct {
-	OSClient string
+	OSClient *opensearch.Client
 }
 
-func NewStoryService(OSClient string) *StoryService {
+func NewStoryService(OSClient *opensearch.Client) *StoryService {
 	return &StoryService{OSClient}
 }
 
@@ -49,7 +54,26 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 
 	story.CreateTime = timestamppb.Now()
 
-	// TODO: Save the Story
+	storyBytesSlice, err := json.Marshal(story)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot marshal the story: %v", err)
+	}
+
+	newReader := strings.NewReader(string(storyBytesSlice))
+
+	// Insert into opensearch
+	OSReq := opensearchapi.IndexRequest{
+		Index: storyIndexOpenSearch,
+		Body:  newReader,
+	}
+
+	insertResponse, err := OSReq.Do(context.Background(), server.OSClient)
+	if err != nil {
+		fmt.Println("failed to insert document ", err)
+		os.Exit(1)
+	}
+	fmt.Println("Inserting a document")
+	fmt.Println(insertResponse)
 
 	resp := &pb.CreateStoryResponse{
 		Id: story.Id,

@@ -1,13 +1,17 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	"os"
 
 	"github.com/89minutes/89minutes/components/story_service/service"
 	"github.com/89minutes/89minutes/pb"
 	"github.com/joho/godotenv"
+	opensearch "github.com/opensearch-project/opensearch-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -18,7 +22,12 @@ func main() {
 		log.Fatalf("cannot load the environment variables: %s", err)
 	}
 
-	storyService := service.NewStoryService("OPENSEARCH")
+	osUser := os.Getenv("OSUSER")
+	osPass := os.Getenv("OSPASS")
+	osEndPoint := os.Getenv("OPENSEARCH")
+
+	openClient := OpenClientClient(osEndPoint, osUser, osPass)
+	storyService := service.NewStoryService(openClient)
 	grpcServer := grpc.NewServer()
 
 	pb.RegisterStoryServiceServer(grpcServer, storyService)
@@ -36,4 +45,20 @@ func main() {
 		log.Fatalf("cannot start gRPC server: %v", err)
 	}
 
+}
+
+func OpenClientClient(endPoint, user, pass string) *opensearch.Client {
+	client, err := opensearch.NewClient(opensearch.Config{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		Addresses: []string{endPoint},
+		Username:  user,
+		Password:  pass,
+	})
+
+	if err != nil {
+		log.Fatalf("Cannot connect to opensearch: %v", err)
+	}
+	return client
 }
