@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/89minutes/89minutes/components/story_service/store"
 	"github.com/89minutes/89minutes/pb"
 	"github.com/google/uuid"
 	"github.com/opensearch-project/opensearch-go"
@@ -19,11 +21,12 @@ import (
 )
 
 type StoryService struct {
-	OSClient *opensearch.Client
+	OSClient  *opensearch.Client
+	fileStore store.FileStore
 }
 
-func NewStoryService(OSClient *opensearch.Client) *StoryService {
-	return &StoryService{OSClient}
+func NewStoryService(OSClient *opensearch.Client, fileStore store.FileStore) *StoryService {
+	return &StoryService{OSClient, fileStore}
 }
 
 func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryRequest) (*pb.CreateStoryResponse, error) {
@@ -52,6 +55,31 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 		return nil, err
 	}
 
+	log.Printf("The files: %v", story.FileContent)
+	// TODO: store files
+	fileData := bytes.Buffer{}
+
+	for _, file := range story.FileContent {
+		_, err := fileData.Write(file)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
+		}
+
+		fileId, err := server.fileStore.Save(story.Id, "image", fileData)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "cannot save image to the store: %v", err)
+		}
+
+		// Replace story filenplaceholder with storyidn.ext
+		fmt.Printf("File Id: %s", fileId)
+	}
+
+	// TODO: Store special text
+
+	// Add or update tags
+	tags := story.Tag
+	log.Printf("Tags are: %v", tags)
+
 	story.CreateTime = timestamppb.Now()
 
 	storyBytesSlice, err := json.Marshal(story)
@@ -63,7 +91,7 @@ func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryReque
 
 	// Insert into opensearch
 	OSReq := opensearchapi.IndexRequest{
-		Index: storyIndexOpenSearch,
+		Index: storyIndex,
 		Body:  newReader,
 	}
 

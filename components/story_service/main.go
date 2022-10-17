@@ -9,7 +9,8 @@ import (
 	"os"
 
 	"github.com/89minutes/89minutes/components/story_service/service"
-	"github.com/89minutes/89minutes/pb"
+	"github.com/89minutes/89minutes/components/story_service/store"
+	pb "github.com/89minutes/89minutes/pb"
 	"github.com/joho/godotenv"
 	opensearch "github.com/opensearch-project/opensearch-go"
 	"google.golang.org/grpc"
@@ -27,7 +28,8 @@ func main() {
 	osEndPoint := os.Getenv("OPENSEARCH")
 
 	openClient := OpenClientClient(osEndPoint, osUser, osPass)
-	storyService := service.NewStoryService(openClient)
+	newDiskStore := store.NewDiskFileStore("cloud")
+	storyService := service.NewStoryService(openClient, newDiskStore)
 	grpcServer := grpc.NewServer()
 
 	pb.RegisterStoryServiceServer(grpcServer, storyService)

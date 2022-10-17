@@ -1,6 +1,7 @@
 package service
 
 const (
-	noOfLatestStories    = 10
-	storyIndexOpenSearch = "story"
+	noOfLatestStories = 10
+	storyIndex        = "story"
+	tagIndex          = "tag"
 )

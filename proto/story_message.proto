@@ -36,9 +36,7 @@ message StoryGetResponse {
 }
 
 message Tag {
-    string id = 1;
-    string tagName = 2;
-    string tagVal = 3;
+    string tagName = 1;
 }
 
 

@@ -9,6 +9,7 @@
 * Docker
 * Git
 * Protoc
+* Evans client
 
 ## Contribution guild
 ...
