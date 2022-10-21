@@ -23,10 +23,14 @@ import (
 type StoryService struct {
 	OSClient  *opensearch.Client
 	fileStore store.FileStore
+	pb.UnimplementedStoryServiceServer
 }
 
 func NewStoryService(OSClient *opensearch.Client, fileStore store.FileStore) *StoryService {
-	return &StoryService{OSClient, fileStore}
+	return &StoryService{
+		OSClient:  OSClient,
+		fileStore: fileStore,
+	}
 }
 
 func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryRequest) (*pb.CreateStoryResponse, error) {
