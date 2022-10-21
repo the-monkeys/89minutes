@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package=".;pb";
 
 import "story_message.proto";
+import "google/api/annotations.proto";
 
 message CreateStoryRequest{
     Story story = 1;
@@ -14,7 +15,10 @@ message CreateStoryResponse {
 
 service StoryService {
     rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
-
+        option (google.api.http) = {
+            post: "/v1/89minutes/create"
+            body: "*"
+        };
     };
 
     rpc GetLatest(GetLatestStoryRequest) returns (stream GetLatestStoryResponse){
