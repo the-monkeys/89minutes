@@ -1,20 +1,17 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
-	"strings"
 	"sync"
 
 	"github.com/89minutes/89minutes/components/story_service/store"
 	"github.com/89minutes/89minutes/pb"
 	"github.com/google/uuid"
 	"github.com/opensearch-project/opensearch-go"
-	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -33,84 +30,102 @@ func NewStoryService(OSClient *opensearch.Client, fileStore store.FileStore) *St
 	}
 }
 
+func (server *StoryService) PingPong(ctx context.Context, req *pb.Ping) (*pb.Pong, error) {
+	if req.Ping != "ping" {
+		return nil, status.Errorf(codes.InvalidArgument, "The request is not ping")
+	}
+	return &pb.Pong{
+		Ping: "Pong",
+	}, nil
+}
 func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryRequest) (*pb.CreateStoryResponse, error) {
-	story := req.GetStory()
-	log.Printf("received a create-story request with id: %s", story.Id)
-
-	// Check if Id exists
-	if len(story.Id) > 0 {
-		// If Id exists then is it a valid UUID
-		_, err := uuid.Parse(story.Id)
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "story id is not a valid UUID: %v", err)
-		}
-	} else {
-		// Else assign a valid UUID
-		newUUID, err := uuid.NewRandom()
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "cannot generate a new laptop id: %v", err)
-		}
-
-		story.Id = newUUID.String()
-	}
-
-	// Check for the context error
-	if err := contextError(ctx); err != nil {
-		return nil, err
-	}
-
-	log.Printf("The files: %v", story.FileContent)
-	// TODO: store files
-	fileData := bytes.Buffer{}
-
-	for _, file := range story.FileContent {
-		_, err := fileData.Write(file)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
-		}
-
-		fileId, err := server.fileStore.Save(story.Id, "image", fileData)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "cannot save image to the store: %v", err)
-		}
-
-		// Replace story filenplaceholder with storyidn.ext
-		fmt.Printf("File Id: %s", fileId)
-	}
-
-	// TODO: Store special text
-
-	// Add or update tags
-	tags := story.Tag
-	log.Printf("Tags are: %v", tags)
-
-	story.CreateTime = timestamppb.Now()
-
-	storyBytesSlice, err := json.Marshal(story)
+	// story := req.GetStory()
+	byteX, err := json.MarshalIndent(req, "", "    ")
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot marshal the story: %v", err)
+		fmt.Printf("Error while marshalling json: %v", err)
+		// return nil, err
 	}
 
-	newReader := strings.NewReader(string(storyBytesSlice))
+	ioutil.WriteFile("test/sample_io.json", byteX, 0666)
 
-	// Insert into opensearch
-	OSReq := opensearchapi.IndexRequest{
-		Index: storyIndex,
-		Body:  newReader,
-	}
+	log.Println("Hello")
+	// story := req.GetStory()
+	// log.Printf("received a create-story request with id: %s", story.Id)
 
-	insertResponse, err := OSReq.Do(context.Background(), server.OSClient)
-	if err != nil {
-		fmt.Println("failed to insert document ", err)
-		os.Exit(1)
-	}
-	fmt.Println("Inserting a document")
-	fmt.Println(insertResponse)
+	// // Check if Id exists
+	// if len(story.Id) > 0 {
+	// 	// If Id exists then is it a valid UUID
+	// 	_, err := uuid.Parse(story.Id)
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.InvalidArgument, "story id is not a valid UUID: %v", err)
+	// 	}
+	// } else {
+	// 	// Else assign a valid UUID
+	// 	newUUID, err := uuid.NewRandom()
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.Internal, "cannot generate a new laptop id: %v", err)
+	// 	}
 
-	resp := &pb.CreateStoryResponse{
-		Id: story.Id,
-	}
-	return resp, nil
+	// 	story.Id = newUUID.String()
+	// }
+
+	// // Check for the context error
+	// if err := contextError(ctx); err != nil {
+	// 	return nil, err
+	// }
+
+	// log.Printf("The files: %v", story.FileContent)
+	// // TODO: store files
+	// fileData := bytes.Buffer{}
+
+	// for _, file := range story.FileContent {
+	// 	_, err := fileData.Write(file)
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
+	// 	}
+
+	// 	fileId, err := server.fileStore.Save(story.Id, "image", fileData)
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.Internal, "cannot save image to the store: %v", err)
+	// 	}
+
+	// 	// Replace story filenplaceholder with storyidn.ext
+	// 	fmt.Printf("File Id: %s", fileId)
+	// }
+
+	// // TODO: Store special text
+
+	// // Add or update tags
+	// tags := story.Tag
+	// log.Printf("Tags are: %v", tags)
+
+	// story.CreateTime = timestamppb.Now()
+
+	// storyBytesSlice, err := json.Marshal(story)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "cannot marshal the story: %v", err)
+	// }
+
+	// newReader := strings.NewReader(string(storyBytesSlice))
+
+	// // Insert into opensearch
+	// OSReq := opensearchapi.IndexRequest{
+	// 	Index: storyIndex,
+	// 	Body:  newReader,
+	// }
+
+	// insertResponse, err := OSReq.Do(context.Background(), server.OSClient)
+	// if err != nil {
+	// 	fmt.Println("failed to insert document ", err)
+	// 	os.Exit(1)
+	// }
+	// fmt.Println("Inserting a document")
+	// fmt.Println(insertResponse)
+
+	// resp := &pb.CreateStoryResponse{
+	// 	Id: story.Id,
+	// }
+	return nil, nil
 }
 
 func (server *StoryService) Update(ctx context.Context, req *pb.UpdateStoryRequest) (*pb.UpdateStoryResponse, error) {

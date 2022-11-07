@@ -1,0 +1,22 @@
+{
+    "story": {
+        "id": "sd",
+        "title": "sfdfsd",
+        "textContent": "sddsf",
+        "WrittenBy": "dsds",
+        "isDraft": true,
+        "Tag": [
+            {
+                "tagName": "sd"
+            },
+            {
+                "tagName": "d"
+            },
+            {
+                "tagName": "d"
+            }
+        ],
+        "createTime": {},
+        "updateTime": {}
+    }
+}
