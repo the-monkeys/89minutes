@@ -3,6 +3,8 @@ syntax = "proto3";
 option go_package=".;pb";
 
 import "story_message.proto";
+import "google/api/annotations.proto";
+// import "protoc-gen-swagger/options/annotations.proto";
 
 message CreateStoryRequest{
     Story story = 1;
@@ -12,9 +14,27 @@ message CreateStoryResponse {
     string id = 1;
 }
 
-service StoryService {
-    rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
+message Ping {
+    string ping = 1;
+}
+message Pong {
+    string ping = 1;
+}
 
+service StoryService {
+
+    rpc PingPong(Ping) returns (Pong) {
+        option (google.api.http) = {
+            post: "/v1/89minutes/ping"
+            body: "*"
+        };
+    };
+
+    rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
+        option (google.api.http) = {
+            post: "/v1/89minutes/create"
+            body: "*"
+        };
     };
 
     rpc GetLatest(GetLatestStoryRequest) returns (stream GetLatestStoryResponse){
