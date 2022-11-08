@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StoryServiceClient interface {
 	PingPong(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error)
+	GetBlob(ctx context.Context, opts ...grpc.CallOption) (StoryService_GetBlobClient, error)
 	Create(ctx context.Context, in *CreateStoryRequest, opts ...grpc.CallOption) (*CreateStoryResponse, error)
 	GetLatest(ctx context.Context, in *GetLatestStoryRequest, opts ...grpc.CallOption) (StoryService_GetLatestClient, error)
 	Update(ctx context.Context, in *UpdateStoryRequest, opts ...grpc.CallOption) (*UpdateStoryResponse, error)
@@ -45,6 +46,40 @@ func (c *storyServiceClient) PingPong(ctx context.Context, in *Ping, opts ...grp
 	return out, nil
 }
 
+func (c *storyServiceClient) GetBlob(ctx context.Context, opts ...grpc.CallOption) (StoryService_GetBlobClient, error) {
+	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[0], "/StoryService/GetBlob", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &storyServiceGetBlobClient{stream}
+	return x, nil
+}
+
+type StoryService_GetBlobClient interface {
+	Send(*StoryRequest) error
+	CloseAndRecv() (*StoryResponse, error)
+	grpc.ClientStream
+}
+
+type storyServiceGetBlobClient struct {
+	grpc.ClientStream
+}
+
+func (x *storyServiceGetBlobClient) Send(m *StoryRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *storyServiceGetBlobClient) CloseAndRecv() (*StoryResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(StoryResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *storyServiceClient) Create(ctx context.Context, in *CreateStoryRequest, opts ...grpc.CallOption) (*CreateStoryResponse, error) {
 	out := new(CreateStoryResponse)
 	err := c.cc.Invoke(ctx, "/StoryService/Create", in, out, opts...)
@@ -55,7 +90,7 @@ func (c *storyServiceClient) Create(ctx context.Context, in *CreateStoryRequest,
 }
 
 func (c *storyServiceClient) GetLatest(ctx context.Context, in *GetLatestStoryRequest, opts ...grpc.CallOption) (StoryService_GetLatestClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[0], "/StoryService/GetLatest", opts...)
+	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[1], "/StoryService/GetLatest", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +135,7 @@ func (c *storyServiceClient) Update(ctx context.Context, in *UpdateStoryRequest,
 // for forward compatibility
 type StoryServiceServer interface {
 	PingPong(context.Context, *Ping) (*Pong, error)
+	GetBlob(StoryService_GetBlobServer) error
 	Create(context.Context, *CreateStoryRequest) (*CreateStoryResponse, error)
 	GetLatest(*GetLatestStoryRequest, StoryService_GetLatestServer) error
 	Update(context.Context, *UpdateStoryRequest) (*UpdateStoryResponse, error)
@@ -112,6 +148,9 @@ type UnimplementedStoryServiceServer struct {
 
 func (UnimplementedStoryServiceServer) PingPong(context.Context, *Ping) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PingPong not implemented")
+}
+func (UnimplementedStoryServiceServer) GetBlob(StoryService_GetBlobServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetBlob not implemented")
 }
 func (UnimplementedStoryServiceServer) Create(context.Context, *CreateStoryRequest) (*CreateStoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
@@ -151,6 +190,32 @@ func _StoryService_PingPong_Handler(srv interface{}, ctx context.Context, dec fu
 		return srv.(StoryServiceServer).PingPong(ctx, req.(*Ping))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _StoryService_GetBlob_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(StoryServiceServer).GetBlob(&storyServiceGetBlobServer{stream})
+}
+
+type StoryService_GetBlobServer interface {
+	SendAndClose(*StoryResponse) error
+	Recv() (*StoryRequest, error)
+	grpc.ServerStream
+}
+
+type storyServiceGetBlobServer struct {
+	grpc.ServerStream
+}
+
+func (x *storyServiceGetBlobServer) SendAndClose(m *StoryResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *storyServiceGetBlobServer) Recv() (*StoryRequest, error) {
+	m := new(StoryRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func _StoryService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -231,6 +296,11 @@ var StoryService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetBlob",
+			Handler:       _StoryService_GetBlob_Handler,
+			ClientStreams: true,
+		},
 		{
 			StreamName:    "GetLatest",
 			Handler:       _StoryService_GetLatest_Handler,

@@ -4,6 +4,42 @@ option go_package=".;pb";
 
 import "google/protobuf/timestamp.proto";
 
+// message BlobReq {
+//      // UUID
+//      string id = 1;
+//      // Title of the story
+//      string title = 2;
+     
+//     oneof contents {
+//         FileHeader header = 3;
+//         bytes chunk = 4;
+//     }
+// }
+
+message FileHeader {
+    string name = 1;
+    optional int64 file_size = 2;
+}
+
+message StoryRequest {
+    oneof data {
+        FileHeader info = 1;
+        bytes chunk_data = 2;
+    };
+}
+
+
+// message ImageInfo {
+//     string laptop_id = 1;
+//     string image_type = 2;
+// }
+
+
+message StoryResponse {
+    string id = 1;
+    uint32 size = 2;
+}
+  
 
 message Story {
     // UUID
