@@ -6,3 +6,6 @@ The above command starts a container in the background and we can have a local e
 
 ## To run Evans client to test the application run the following command
 `evans -r repl -p 8080`
+
+<!-- If protoc doesn't work run the following command -->
+`export PATH="$PATH:$HOME/.local/bin"`
