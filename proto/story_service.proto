@@ -4,7 +4,6 @@ option go_package=".;pb";
 
 import "story_message.proto";
 import "google/api/annotations.proto";
-// import "protoc-gen-swagger/options/annotations.proto";
 
 message CreateStoryRequest{
     Story story = 1;
