@@ -1,11 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"sync"
 
 	"github.com/89minutes/89minutes/components/story_service/store"
@@ -16,6 +19,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const maxImageSize = 1 << 20
 
 type StoryService struct {
 	OSClient  *opensearch.Client
@@ -38,6 +43,78 @@ func (server *StoryService) PingPong(ctx context.Context, req *pb.Ping) (*pb.Pon
 		Ping: "Pong",
 	}, nil
 }
+
+func (server *StoryService) GetBlob(stream pb.StoryService_GetBlobServer) error {
+	req, err := stream.Recv()
+	if err != nil {
+		return status.Errorf(codes.Unknown, "cannot receive image info")
+	}
+
+	fileSize := req.GetInfo().GetFileSize()
+	filePath := req.GetInfo().GetName()
+	fileId := uuid.New().String()
+	_, fileName := filepath.Split(filePath)
+
+	log.Printf("receive an request for chunk %d filename %s", fileSize, fileName)
+
+	fileData := bytes.Buffer{}
+	fileSizeNew := 0
+
+	for {
+		err := contextError(stream.Context())
+		if err != nil {
+			return err
+		}
+
+		log.Print("waiting to receive more data")
+
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Print("no more data")
+			break
+		}
+		if err != nil {
+			return status.Errorf(codes.Unknown, "cannot receive chunk data: %v", err)
+		}
+
+		chunk := req.GetChunkData()
+		size := len(chunk)
+
+		log.Printf("received a chunk with size: %d", size)
+
+		fileSizeNew += size
+		if fileSize > maxImageSize {
+			return status.Errorf(codes.InvalidArgument, "image is too large: %d > %d", fileSize, maxImageSize)
+		}
+
+		// write slowly
+		// time.Sleep(time.Second)
+
+		_, err = fileData.Write(chunk)
+		if err != nil {
+			return status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
+		}
+	}
+
+	fileID, err := server.fileStore.Save(fileId, fileName, fileData)
+	if err != nil {
+		return status.Errorf(codes.Internal, "cannot save image to the store: %v", err)
+	}
+
+	res := &pb.StoryResponse{
+		Id:   fileID,
+		Size: uint32(fileSize),
+	}
+
+	err = stream.SendAndClose(res)
+	if err != nil {
+		return status.Errorf(codes.Unknown, "cannot send response: %v", err)
+	}
+
+	log.Printf("saved image with id: %s, size: %d", fileID, fileSize)
+	return nil
+}
+
 func (server *StoryService) Create(ctx context.Context, req *pb.CreateStoryRequest) (*pb.CreateStoryResponse, error) {
 	// story := req.GetStory()
 	byteX, err := json.MarshalIndent(req, "", "    ")

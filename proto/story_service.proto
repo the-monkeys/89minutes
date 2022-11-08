@@ -16,6 +16,7 @@ message CreateStoryResponse {
 message Ping {
     string ping = 1;
 }
+
 message Pong {
     string ping = 1;
 }
@@ -25,6 +26,13 @@ service StoryService {
     rpc PingPong(Ping) returns (Pong) {
         option (google.api.http) = {
             post: "/v1/89minutes/ping"
+            body: "*"
+        };
+    };
+
+    rpc GetBlob(stream StoryRequest) returns (StoryResponse) {
+        option (google.api.http) = {
+            post: "/v1/89minutes/blog"
             body: "*"
         };
     };

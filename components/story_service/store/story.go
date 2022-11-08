@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -37,8 +38,13 @@ func (store *DiskFileStore) Save(storyId string, fileType string, fileData bytes
 	if err != nil {
 		return "", fmt.Errorf("cannot generate file id: %w", err)
 	}
+	log.Println("****storyId: ", storyId)
+	log.Println("****fileType: ", fileType)
+	// log.Println("****FILE PATH: ", imagePath)
 
-	imagePath := fmt.Sprintf("%s/%s%s", store.fileDir, imageID, fileType)
+	imagePath := fmt.Sprintf("%s/%s", store.fileDir, imageID.String()+fileType)
+
+	log.Println("****FILE PATH: ", imagePath)
 
 	file, err := os.Create(imagePath)
 	if err != nil {
