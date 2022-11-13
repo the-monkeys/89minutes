@@ -21,34 +21,35 @@ message Pong {
     string ping = 1;
 }
 
+message UploadStoryAndFilesReq {
+    bytes Content = 1;
+    string Filename = 2;
+}
+
+message UploadStoryAndFilesRes {
+    string Message = 1;
+    UploadStatusCode Code = 2;
+}
+
+enum UploadStatusCode {
+    Unknown = 0;
+    Ok = 1;
+    Failed = 2;
+}
+
 service StoryService {
 
     rpc PingPong(Ping) returns (Pong) {
-        option (google.api.http) = {
+        option (google.api.http) = { 
             post: "/v1/89minutes/ping"
             body: "*"
         };
     };
 
-    rpc GetBlob(stream StoryRequest) returns (StoryResponse) {
+    rpc UploadStoryAndFiles(stream UploadStoryAndFilesReq) returns (UploadStoryAndFilesRes) {
         option (google.api.http) = {
-            post: "/v1/89minutes/blog"
+            post: "/v1/89minutes/story"
             body: "*"
-        };
-    };
-
-    rpc Create(CreateStoryRequest) returns (CreateStoryResponse) {
-        option (google.api.http) = {
-            post: "/v1/89minutes/create"
-            body: "*"
-        };
-    };
-
-    rpc GetLatest(GetLatestStoryRequest) returns (stream GetLatestStoryResponse){
-
-    };
-
-    rpc Update(UpdateStoryRequest) returns (UpdateStoryResponse) {
-
+        };  
     };
 }
