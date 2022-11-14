@@ -23,10 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StoryServiceClient interface {
 	PingPong(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error)
-	GetBlob(ctx context.Context, opts ...grpc.CallOption) (StoryService_GetBlobClient, error)
-	Create(ctx context.Context, in *CreateStoryRequest, opts ...grpc.CallOption) (*CreateStoryResponse, error)
-	GetLatest(ctx context.Context, in *GetLatestStoryRequest, opts ...grpc.CallOption) (StoryService_GetLatestClient, error)
-	Update(ctx context.Context, in *UpdateStoryRequest, opts ...grpc.CallOption) (*UpdateStoryResponse, error)
+	UploadStoryAndFiles(ctx context.Context, opts ...grpc.CallOption) (StoryService_UploadStoryAndFilesClient, error)
 }
 
 type storyServiceClient struct {
@@ -46,88 +43,38 @@ func (c *storyServiceClient) PingPong(ctx context.Context, in *Ping, opts ...grp
 	return out, nil
 }
 
-func (c *storyServiceClient) GetBlob(ctx context.Context, opts ...grpc.CallOption) (StoryService_GetBlobClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[0], "/StoryService/GetBlob", opts...)
+func (c *storyServiceClient) UploadStoryAndFiles(ctx context.Context, opts ...grpc.CallOption) (StoryService_UploadStoryAndFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[0], "/StoryService/UploadStoryAndFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &storyServiceGetBlobClient{stream}
+	x := &storyServiceUploadStoryAndFilesClient{stream}
 	return x, nil
 }
 
-type StoryService_GetBlobClient interface {
-	Send(*StoryRequest) error
-	CloseAndRecv() (*StoryResponse, error)
+type StoryService_UploadStoryAndFilesClient interface {
+	Send(*UploadStoryAndFilesReq) error
+	CloseAndRecv() (*UploadStoryAndFilesRes, error)
 	grpc.ClientStream
 }
 
-type storyServiceGetBlobClient struct {
+type storyServiceUploadStoryAndFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *storyServiceGetBlobClient) Send(m *StoryRequest) error {
+func (x *storyServiceUploadStoryAndFilesClient) Send(m *UploadStoryAndFilesReq) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *storyServiceGetBlobClient) CloseAndRecv() (*StoryResponse, error) {
+func (x *storyServiceUploadStoryAndFilesClient) CloseAndRecv() (*UploadStoryAndFilesRes, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(StoryResponse)
+	m := new(UploadStoryAndFilesRes)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
-}
-
-func (c *storyServiceClient) Create(ctx context.Context, in *CreateStoryRequest, opts ...grpc.CallOption) (*CreateStoryResponse, error) {
-	out := new(CreateStoryResponse)
-	err := c.cc.Invoke(ctx, "/StoryService/Create", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *storyServiceClient) GetLatest(ctx context.Context, in *GetLatestStoryRequest, opts ...grpc.CallOption) (StoryService_GetLatestClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StoryService_ServiceDesc.Streams[1], "/StoryService/GetLatest", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &storyServiceGetLatestClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type StoryService_GetLatestClient interface {
-	Recv() (*GetLatestStoryResponse, error)
-	grpc.ClientStream
-}
-
-type storyServiceGetLatestClient struct {
-	grpc.ClientStream
-}
-
-func (x *storyServiceGetLatestClient) Recv() (*GetLatestStoryResponse, error) {
-	m := new(GetLatestStoryResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *storyServiceClient) Update(ctx context.Context, in *UpdateStoryRequest, opts ...grpc.CallOption) (*UpdateStoryResponse, error) {
-	out := new(UpdateStoryResponse)
-	err := c.cc.Invoke(ctx, "/StoryService/Update", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 // StoryServiceServer is the server API for StoryService service.
@@ -135,10 +82,7 @@ func (c *storyServiceClient) Update(ctx context.Context, in *UpdateStoryRequest,
 // for forward compatibility
 type StoryServiceServer interface {
 	PingPong(context.Context, *Ping) (*Pong, error)
-	GetBlob(StoryService_GetBlobServer) error
-	Create(context.Context, *CreateStoryRequest) (*CreateStoryResponse, error)
-	GetLatest(*GetLatestStoryRequest, StoryService_GetLatestServer) error
-	Update(context.Context, *UpdateStoryRequest) (*UpdateStoryResponse, error)
+	UploadStoryAndFiles(StoryService_UploadStoryAndFilesServer) error
 	mustEmbedUnimplementedStoryServiceServer()
 }
 
@@ -149,17 +93,8 @@ type UnimplementedStoryServiceServer struct {
 func (UnimplementedStoryServiceServer) PingPong(context.Context, *Ping) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PingPong not implemented")
 }
-func (UnimplementedStoryServiceServer) GetBlob(StoryService_GetBlobServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetBlob not implemented")
-}
-func (UnimplementedStoryServiceServer) Create(context.Context, *CreateStoryRequest) (*CreateStoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
-}
-func (UnimplementedStoryServiceServer) GetLatest(*GetLatestStoryRequest, StoryService_GetLatestServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetLatest not implemented")
-}
-func (UnimplementedStoryServiceServer) Update(context.Context, *UpdateStoryRequest) (*UpdateStoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+func (UnimplementedStoryServiceServer) UploadStoryAndFiles(StoryService_UploadStoryAndFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadStoryAndFiles not implemented")
 }
 func (UnimplementedStoryServiceServer) mustEmbedUnimplementedStoryServiceServer() {}
 
@@ -192,87 +127,30 @@ func _StoryService_PingPong_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StoryService_GetBlob_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(StoryServiceServer).GetBlob(&storyServiceGetBlobServer{stream})
+func _StoryService_UploadStoryAndFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(StoryServiceServer).UploadStoryAndFiles(&storyServiceUploadStoryAndFilesServer{stream})
 }
 
-type StoryService_GetBlobServer interface {
-	SendAndClose(*StoryResponse) error
-	Recv() (*StoryRequest, error)
+type StoryService_UploadStoryAndFilesServer interface {
+	SendAndClose(*UploadStoryAndFilesRes) error
+	Recv() (*UploadStoryAndFilesReq, error)
 	grpc.ServerStream
 }
 
-type storyServiceGetBlobServer struct {
+type storyServiceUploadStoryAndFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *storyServiceGetBlobServer) SendAndClose(m *StoryResponse) error {
+func (x *storyServiceUploadStoryAndFilesServer) SendAndClose(m *UploadStoryAndFilesRes) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *storyServiceGetBlobServer) Recv() (*StoryRequest, error) {
-	m := new(StoryRequest)
+func (x *storyServiceUploadStoryAndFilesServer) Recv() (*UploadStoryAndFilesReq, error) {
+	m := new(UploadStoryAndFilesReq)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
-}
-
-func _StoryService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateStoryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(StoryServiceServer).Create(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/StoryService/Create",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StoryServiceServer).Create(ctx, req.(*CreateStoryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _StoryService_GetLatest_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetLatestStoryRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(StoryServiceServer).GetLatest(m, &storyServiceGetLatestServer{stream})
-}
-
-type StoryService_GetLatestServer interface {
-	Send(*GetLatestStoryResponse) error
-	grpc.ServerStream
-}
-
-type storyServiceGetLatestServer struct {
-	grpc.ServerStream
-}
-
-func (x *storyServiceGetLatestServer) Send(m *GetLatestStoryResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _StoryService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateStoryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(StoryServiceServer).Update(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/StoryService/Update",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StoryServiceServer).Update(ctx, req.(*UpdateStoryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 // StoryService_ServiceDesc is the grpc.ServiceDesc for StoryService service.
@@ -286,25 +164,12 @@ var StoryService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "PingPong",
 			Handler:    _StoryService_PingPong_Handler,
 		},
-		{
-			MethodName: "Create",
-			Handler:    _StoryService_Create_Handler,
-		},
-		{
-			MethodName: "Update",
-			Handler:    _StoryService_Update_Handler,
-		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "GetBlob",
-			Handler:       _StoryService_GetBlob_Handler,
+			StreamName:    "UploadStoryAndFiles",
+			Handler:       _StoryService_UploadStoryAndFiles_Handler,
 			ClientStreams: true,
-		},
-		{
-			StreamName:    "GetLatest",
-			Handler:       _StoryService_GetLatest_Handler,
-			ServerStreams: true,
 		},
 	},
 	Metadata: "story_service.proto",
