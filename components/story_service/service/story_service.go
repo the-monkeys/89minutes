@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/89minutes/89minutes/components/story_service/store"
 	"github.com/89minutes/89minutes/pb"
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/pkg/errors"
@@ -21,17 +20,17 @@ import (
 const maxImageSize = 1 << 20
 
 type StoryService struct {
-	OSClient  *opensearch.Client
-	fileStore store.FileStore
-	logger    logrus.Logger
-	destDir   string
+	OSClient *opensearch.Client
+	logger   logrus.Logger
+	storyDir string
 	pb.UnimplementedStoryServiceServer
 }
 
-func NewStoryService(OSClient *opensearch.Client, fileStore store.FileStore) *StoryService {
+func NewStoryService(OSClient *opensearch.Client, logger logrus.Logger, storyDir string) *StoryService {
 	return &StoryService{
-		OSClient:  OSClient,
-		fileStore: fileStore,
+		OSClient: OSClient,
+		logger:   logger,
+		storyDir: storyDir,
 	}
 }
 
@@ -69,7 +68,7 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 
 			if fileData.Filename != "" { //create file
 
-				fp, err = os.Create(path.Join(server.destDir, filepath.Base(fileData.Filename)))
+				fp, err = os.Create(path.Join(server.storyDir, filepath.Base(fileData.Filename)))
 
 				if err != nil {
 					server.logger.Errorf("Unable to create file %s, ERROR: %v", fileData.Filename, err)
@@ -114,7 +113,7 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			"failed to send status code")
 		return
 	}
-	fmt.Println("Successfully received and stored the file :" + filename + " in " + server.destDir)
+	fmt.Println("Successfully received and stored the file :" + filename + " in " + server.storyDir)
 
 	return nil
 }
