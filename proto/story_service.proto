@@ -22,8 +22,9 @@ message Pong {
 }
 
 message UploadStoryAndFilesReq {
-    bytes Content = 1;
-    string Filename = 2;
+    string id = 1;
+    bytes Content = 2;
+    string Filename = 3;
 }
 
 message UploadStoryAndFilesRes {

@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/89minutes/89minutes/pb"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -42,6 +44,7 @@ func main() {
 }
 
 type uploader struct {
+	id          string
 	dir         string
 	client      pb.StoryServiceClient
 	ctx         context.Context
@@ -53,8 +56,9 @@ type uploader struct {
 }
 
 // /NewUploader creates a object of type uploader and creates fixed worker goroutines/threads
-func NewUploader(ctx context.Context, client pb.StoryServiceClient, dir string) *uploader {
+func NewUploader(ctx context.Context, client pb.StoryServiceClient, dir string, id string) *uploader {
 	d := &uploader{
+		id:          id,
 		ctx:         ctx,
 		client:      client,
 		dir:         dir,
@@ -78,6 +82,7 @@ func (d *uploader) Stop() {
 }
 
 func (d *uploader) worker(workerID int) {
+	logrus.Infof("The d with worker id %d: %+v", workerID, d)
 	defer d.wg.Done()
 	var (
 		buf        []byte
@@ -85,13 +90,9 @@ func (d *uploader) worker(workerID int) {
 	)
 	for request := range d.requests {
 
-		//open
-		//.Println("Processsing " + request)
-		file, errOpen := os.Open(request)
-		if errOpen != nil {
-			errOpen = errors.Wrapf(errOpen,
-				"failed to open file %s",
-				request)
+		file, err := os.Open(request)
+		if err != nil {
+			logrus.Errorf("cannot open the file %s: error: %+v", request, err)
 			return
 		}
 
@@ -100,19 +101,17 @@ func (d *uploader) worker(workerID int) {
 		//start uploader
 		streamUploader, err := d.client.UploadStoryAndFiles(d.ctx)
 		if err != nil {
-			err = errors.Wrapf(err,
-				"failed to create upload stream for file %s",
-				request)
+			logrus.Errorf("failed to create upload stream for file, error: %v", err)
 			return
 		}
+
 		defer streamUploader.CloseSend()
-		stat, errstat := file.Stat()
-		if errstat != nil {
-			err = errors.Wrapf(err,
-				"Unable to get file size  %s",
-				request)
+		stat, err := file.Stat()
+		if err != nil {
+			logrus.Errorf("Unable to get file size, error %v", err)
 			return
 		}
+
 		//start progress bar
 		bar := pool.New64(stat.Size()).Postfix(" " + filepath.Base(request))
 		bar.Units = pool.U_BYTES
@@ -135,6 +134,7 @@ func (d *uploader) worker(workerID int) {
 			}
 			if firstChunk {
 				err = streamUploader.Send(&pb.UploadStoryAndFilesReq{
+					Id:       d.id,
 					Content:  buf[:n],
 					Filename: request,
 				})
@@ -145,11 +145,8 @@ func (d *uploader) worker(workerID int) {
 				})
 			}
 			if err != nil {
-
 				bar.FinishPrint("failed to send chunk via stream file : " + request)
 				break
-				//bar.Reset(0)
-				//return
 			}
 
 			bar.Add64(int64(n))
@@ -184,8 +181,10 @@ func (d *uploader) Do(filepath string) {
 }
 
 func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filepathlist []string, dir string) error {
+	uuid := uuid.New().String()
+	logrus.Infof("The id: %v", uuid)
+	d := NewUploader(ctx, client, dir, uuid)
 
-	d := NewUploader(ctx, client, dir)
 	var errorUploadBulk error
 
 	if dir != "" {

@@ -63,12 +63,18 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 				"failed unexpectedly while reading chunks from stream")
 			return
 		}
+		newPath := path.Join(server.storyDir, fileData.Id)
+		// server.logger.Infof("The id: %+v", fileData)
+		if err = os.MkdirAll(newPath, os.ModePerm); err != nil {
+			server.logger.Errorf("cannot create the dir: %v", err)
+			return err
+		}
 
 		if firstChunk { //first chunk contains file name
 
 			if fileData.Filename != "" { //create file
 
-				fp, err = os.Create(path.Join(server.storyDir, filepath.Base(fileData.Filename)))
+				fp, err = os.Create(path.Join(newPath, filepath.Base(fileData.Filename)))
 
 				if err != nil {
 					server.logger.Errorf("Unable to create file %s, ERROR: %v", fileData.Filename, err)
