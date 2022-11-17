@@ -13,3 +13,6 @@ gen-no-swagger:
     proto/*.proto
 run:
   go run components/story_service/main.go
+
+run-client:
+  go run ~/89minutes//components/story_service/client/main.go upload -a localhost:8080 -d test/blog/

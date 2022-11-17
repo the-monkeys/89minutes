@@ -82,7 +82,6 @@ func (d *uploader) Stop() {
 }
 
 func (d *uploader) worker(workerID int) {
-	logrus.Infof("The d with worker id %d: %+v", workerID, d)
 	defer d.wg.Done()
 	var (
 		buf        []byte
@@ -180,9 +179,9 @@ func (d *uploader) Do(filepath string) {
 	d.requests <- filepath
 }
 
-func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filepathlist []string, dir string) error {
+func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filePathList []string, dir string) error {
 	uuid := uuid.New().String()
-	logrus.Infof("The id: %v", uuid)
+
 	d := NewUploader(ctx, client, dir, uuid)
 
 	var errorUploadBulk error
@@ -212,7 +211,7 @@ func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filepathlist
 
 				case <-d.DoneRequest:
 
-					//fmt.Println("sucessfully sent :" + req)
+					//fmt.Println("successfully sent :" + req)
 
 				case req := <-d.FailRequest:
 
@@ -226,18 +225,18 @@ func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filepathlist
 	} else {
 
 		go func() {
-			for _, file := range filepathlist {
+			for _, file := range filePathList {
 				d.Do(file)
 			}
 		}()
 
 		defer d.Stop()
 
-		for i := 0; i < len(filepathlist); i++ {
+		for i := 0; i < len(filePathList); i++ {
 			select {
 
 			case <-d.DoneRequest:
-			//	fmt.Println("sucessfully sent " + req)
+			//	fmt.Println("successfully sent " + req)
 			case req := <-d.FailRequest:
 				fmt.Println("failed to  send " + req)
 				errorUploadBulk = errors.Wrapf(errorUploadBulk, " Failed to send %s", req)
