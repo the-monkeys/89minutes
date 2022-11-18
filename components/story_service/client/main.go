@@ -211,17 +211,15 @@ func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filePathList
 
 				case <-d.DoneRequest:
 
-					//fmt.Println("successfully sent :" + req)
-
 				case req := <-d.FailRequest:
 
-					fmt.Println("failed to  send " + req)
+					logrus.Errorf("failed to send: %v", req)
 					errorUploadBulk = errors.Wrapf(errorUploadBulk, " Failed to send %s", req)
 
 				}
 			}
 		}
-		fmt.Println("All done ")
+		logrus.Info("All done ")
 	} else {
 
 		go func() {
@@ -236,9 +234,9 @@ func UploadFiles(ctx context.Context, client pb.StoryServiceClient, filePathList
 			select {
 
 			case <-d.DoneRequest:
-			//	fmt.Println("successfully sent " + req)
+
 			case req := <-d.FailRequest:
-				fmt.Println("failed to  send " + req)
+				logrus.Errorf("failed to send: %v", req)
 				errorUploadBulk = errors.Wrapf(errorUploadBulk, " Failed to send %s", req)
 			}
 		}

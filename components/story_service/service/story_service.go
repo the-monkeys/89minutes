@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/89minutes/89minutes/pb"
 	"github.com/opensearch-project/opensearch-go"
-	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -59,12 +57,12 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 				break
 			}
 
-			err = errors.Wrapf(err,
-				"failed unexpectedly while reading chunks from stream")
+			server.logger.Errorf("failed unexpectedly while reading chunks from stream, error: %v", err)
 			return
 		}
+
 		newPath := path.Join(server.storyDir, fileData.Id)
-		// server.logger.Infof("The id: %+v", fileData)
+
 		if err = os.MkdirAll(newPath, os.ModePerm); err != nil {
 			server.logger.Errorf("cannot create the dir: %v", err)
 			return err
@@ -109,17 +107,16 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 		}
 	}
 
-	//s.logger.Info().Msg("upload received")
 	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{
 		Message: "Upload received with success",
 		Code:    pb.UploadStatusCode_Ok,
 	})
 	if err != nil {
-		err = errors.Wrapf(err,
-			"failed to send status code")
+		server.logger.Errorf("failed to send status code, error: %v", err)
 		return
 	}
-	fmt.Println("Successfully received and stored the file :" + filename + " in " + server.storyDir)
+
+	server.logger.Infof("Successfully received and stored the file: %s, in  dir: %s", filename, server.storyDir)
 
 	return nil
 }
