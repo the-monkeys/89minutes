@@ -53,4 +53,11 @@ service StoryService {
             body: "*"
         };  
     };
+
+    // rpc UpdateStoryAndFiles(stream UploadStoryAndFilesReq) returns (UploadStoryAndFilesRes) {
+    //     option (google.api.http) = {
+    //         post: "/v1/89minutes/story/{id}"
+    //         body: "*"
+    //     };  
+    // };
 }

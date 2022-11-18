@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 
 message CommentCreateRequest {
     // UUID
-    string id =1;
+    string id = 1;
     // Story UUID
     string storyId = 2;
     // comment content 
