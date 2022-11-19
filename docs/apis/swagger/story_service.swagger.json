@@ -1,0 +1,165 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "story_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "StoryService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/89minutes/ping": {
+      "post": {
+        "operationId": "StoryService_PingPong",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/Pong"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Ping"
+            }
+          }
+        ],
+        "tags": [
+          "StoryService"
+        ]
+      }
+    },
+    "/v1/89minutes/story": {
+      "post": {
+        "operationId": "StoryService_UploadStoryAndFiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UploadStoryAndFilesRes"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": " (streaming inputs)",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UploadStoryAndFilesReq"
+            }
+          }
+        ],
+        "tags": [
+          "StoryService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Ping": {
+      "type": "object",
+      "properties": {
+        "ping": {
+          "type": "string"
+        }
+      }
+    },
+    "Pong": {
+      "type": "object",
+      "properties": {
+        "ping": {
+          "type": "string"
+        }
+      }
+    },
+    "UploadStatusCode": {
+      "type": "string",
+      "enum": [
+        "Unknown",
+        "Ok",
+        "Failed"
+      ],
+      "default": "Unknown"
+    },
+    "UploadStoryAndFilesReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "Content": {
+          "type": "string",
+          "format": "byte"
+        },
+        "Filename": {
+          "type": "string"
+        }
+      }
+    },
+    "UploadStoryAndFilesRes": {
+      "type": "object",
+      "properties": {
+        "Message": {
+          "type": "string"
+        },
+        "Code": {
+          "$ref": "#/definitions/UploadStatusCode"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

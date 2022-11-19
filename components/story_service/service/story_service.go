@@ -118,6 +118,8 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 
 	server.logger.Infof("Successfully received and stored the file: %s, in  dir: %s", filename, server.storyDir)
 
+	// TODO: store the story details to the db
+
 	return nil
 }
 
