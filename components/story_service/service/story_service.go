@@ -68,6 +68,11 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			server.logger.Errorf("cannot create the dir: %v", err)
 			return err
 		}
+		// Setup vars
+		// storyId = fileData.Id
+		// storyTitle = fileData.Title
+		// storyFilePath = newPath
+		// author = fileData.Author
 
 		info = fileData
 
