@@ -99,6 +99,14 @@
         }
       }
     },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "tagName": {
+          "type": "string"
+        }
+      }
+    },
     "UploadStatusCode": {
       "type": "string",
       "enum": [
@@ -114,12 +122,38 @@
         "id": {
           "type": "string"
         },
+        "title": {
+          "type": "string"
+        },
         "Content": {
           "type": "string",
           "format": "byte"
         },
         "Filename": {
           "type": "string"
+        },
+        "Author": {
+          "type": "string"
+        },
+        "isDraft": {
+          "type": "boolean"
+        },
+        "Tag": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Tag"
+          },
+          "title": "Tags for categorizing stories"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Create time"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Update time"
         }
       }
     },

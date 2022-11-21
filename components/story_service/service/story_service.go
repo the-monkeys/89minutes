@@ -67,6 +67,11 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			server.logger.Errorf("cannot create the dir: %v", err)
 			return err
 		}
+		// Setup vars
+		// storyId = fileData.Id
+		// storyTitle = fileData.Title
+		// storyFilePath = newPath
+		// author = fileData.Author
 
 		if firstChunk { //first chunk contains file name
 
@@ -117,8 +122,6 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 	}
 
 	server.logger.Infof("Successfully received and stored the file: %s, in  dir: %s", filename, server.storyDir)
-
-	// TODO: store the story details to the db
 
 	return nil
 }
