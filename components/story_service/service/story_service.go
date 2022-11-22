@@ -7,8 +7,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/89minutes/89minutes/components/story_service/osstore"
 	"github.com/89minutes/89minutes/pb"
-	"github.com/opensearch-project/opensearch-go"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -18,15 +18,16 @@ import (
 const maxImageSize = 1 << 20
 
 type StoryService struct {
-	OSClient *opensearch.Client
+	// OSClient *opensearch.Client
+	OsClient *osstore.OsClient
 	logger   logrus.Logger
 	storyDir string
 	pb.UnimplementedStoryServiceServer
 }
 
-func NewStoryService(OSClient *opensearch.Client, logger logrus.Logger, storyDir string) *StoryService {
+func NewStoryService(OsClient *osstore.OsClient, logger logrus.Logger, storyDir string) *StoryService {
 	return &StoryService{
-		OSClient: OSClient,
+		OsClient: OsClient,
 		logger:   logger,
 		storyDir: storyDir,
 	}
@@ -43,22 +44,22 @@ func (server *StoryService) PingPong(ctx context.Context, req *pb.Ping) (*pb.Pon
 
 func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadStoryAndFilesServer) (err error) {
 	firstChunk := true
+
 	var fp *os.File
-
 	var fileData *pb.UploadStoryAndFilesReq
-
 	var filename string
+	// var flag = true
+
+	var info *pb.UploadStoryAndFilesReq
+
 	for {
-
 		fileData, err = stream.Recv() //ignoring the data  TO-Do save files received
-
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			server.logger.Errorf("failed unexpectedly while reading chunks from stream, error: %v", err)
-			return
+			server.logger.Errorf("failed unexpectedly while reading chunks, error: %v", err)
+			return err
 		}
 
 		newPath := path.Join(server.storyDir, fileData.Id)
@@ -67,36 +68,34 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			server.logger.Errorf("cannot create the dir: %v", err)
 			return err
 		}
-		// Setup vars
-		// storyId = fileData.Id
-		// storyTitle = fileData.Title
-		// storyFilePath = newPath
-		// author = fileData.Author
+
+		info = fileData
+		// Store information into opensearch one time if flag it true
+		// if flag {
+		// 	logrus.Info("The flag is: ", flag)
+		// 	if err := server.OsClient.CreateNewStory(fileData, newPath); err != nil {
+		// 		return err
+		// 	}
+		// 	flag = false
+		// }
 
 		if firstChunk { //first chunk contains file name
-
 			if fileData.Filename != "" { //create file
 
 				fp, err = os.Create(path.Join(newPath, filepath.Base(fileData.Filename)))
-
 				if err != nil {
 					server.logger.Errorf("Unable to create file %s, ERROR: %v", fileData.Filename, err)
-					stream.SendAndClose(&pb.UploadStoryAndFilesRes{
-						Message: "Unable to create file :" + fileData.Filename,
-						Code:    pb.UploadStatusCode_Failed,
-					})
+					stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Unable to create file :" + fileData.Filename, Code: pb.UploadStatusCode_Failed})
 					return
 				}
+
 				defer fp.Close()
 			} else {
 				server.logger.Errorf("FileName not provided in first chunk:  %s" + fileData.Filename)
-				stream.SendAndClose(&pb.UploadStoryAndFilesRes{
-					Message: "FileName not provided in first chunk:" + fileData.Filename,
-					Code:    pb.UploadStatusCode_Failed,
-				})
+				stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "FileName not provided in first chunk:" + fileData.Filename, Code: pb.UploadStatusCode_Failed})
 				return
-
 			}
+
 			filename = fileData.Filename
 			firstChunk = false
 		}
@@ -104,18 +103,12 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 		err = writeToFp(fp, fileData.Content)
 		if err != nil {
 			server.logger.Errorf("Unable to write chunk of filename %s, ERROR: %v", fileData.Filename, err)
-			stream.SendAndClose(&pb.UploadStoryAndFilesRes{
-				Message: "Unable to write chunk of filename :" + fileData.Filename,
-				Code:    pb.UploadStatusCode_Failed,
-			})
+			stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Unable to write chunk of filename :" + fileData.Filename, Code: pb.UploadStatusCode_Failed})
 			return
 		}
 	}
 
-	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{
-		Message: "Upload received with success",
-		Code:    pb.UploadStatusCode_Ok,
-	})
+	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Upload received with success", Code: pb.UploadStatusCode_Ok})
 	if err != nil {
 		server.logger.Errorf("failed to send status code, error: %v", err)
 		return
@@ -123,6 +116,12 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 
 	server.logger.Infof("Successfully received and stored the file: %s, in  dir: %s", filename, server.storyDir)
 
+	//
+	//  This needs to be changed
+	//
+	if err := server.OsClient.CreateNewStory(info, "newPath"); err != nil {
+		return err
+	}
 	return nil
 }
 
