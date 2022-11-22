@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/89minutes/89minutes/components/story_service/osstore"
 	"github.com/89minutes/89minutes/components/story_service/service"
 	pb "github.com/89minutes/89minutes/pb"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -35,8 +36,9 @@ func main() {
 	osEndPoint := os.Getenv("OPENSEARCH")
 
 	openClient := OpenClientClient(osEndPoint, osUser, osPass)
+	osClient := osstore.NewOsClient(openClient)
 	// newDiskStore := store.NewDiskFileStore("cloud")
-	storyService := service.NewStoryService(openClient, *logrus.New(), fileStorage)
+	storyService := service.NewStoryService(osClient, *logrus.New(), fileStorage)
 	grpcServer := grpc.NewServer()
 
 	pb.RegisterStoryServiceServer(grpcServer, storyService)
