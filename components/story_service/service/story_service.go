@@ -70,14 +70,6 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 		}
 
 		info = fileData
-		// Store information into opensearch one time if flag it true
-		// if flag {
-		// 	logrus.Info("The flag is: ", flag)
-		// 	if err := server.OsClient.CreateNewStory(fileData, newPath); err != nil {
-		// 		return err
-		// 	}
-		// 	flag = false
-		// }
 
 		if firstChunk { //first chunk contains file name
 			if fileData.Filename != "" { //create file
@@ -109,6 +101,7 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 	}
 
 	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Upload received with success", Code: pb.UploadStatusCode_Ok})
+
 	if err != nil {
 		server.logger.Errorf("failed to send status code, error: %v", err)
 		return

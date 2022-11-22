@@ -1,9 +1,9 @@
 package osstore
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/89minutes/89minutes/pb"
@@ -34,13 +34,13 @@ func NewOsClient(client *opensearch.Client) *OsClient {
 
 func (client *OsClient) CreateNewStory(ip *pb.UploadStoryAndFilesReq, filePath string) error {
 	story := NewStory(ip, filePath)
-	byteSlice, err := json.Marshal(story)
+
+	byteSlice, err := json.Marshal(&story)
 	if err != nil {
 		return err
 	}
 
-	logrus.Infof("The byteslice: %v", string(byteSlice))
-	document := strings.NewReader(string(byteSlice))
+	document := bytes.NewReader(byteSlice)
 
 	req := opensearchapi.IndexRequest{
 		Index:      "go-test-index1",
@@ -58,8 +58,8 @@ func (client *OsClient) CreateNewStory(ip *pb.UploadStoryAndFilesReq, filePath s
 	return nil
 }
 
-func NewStory(ip *pb.UploadStoryAndFilesReq, filePath string) *Story {
-	return &Story{
+func NewStory(ip *pb.UploadStoryAndFilesReq, filePath string) Story {
+	return Story{
 		id:         ip.Id,
 		title:      ip.Title,
 		author:     ip.Author,
