@@ -68,11 +68,16 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			server.logger.Errorf("cannot create the dir: %v", err)
 			return err
 		}
-		// Setup vars
-		// storyId = fileData.Id
-		// storyTitle = fileData.Title
-		// storyFilePath = newPath
-		// author = fileData.Author
+
+		info = fileData
+		// Store information into opensearch one time if flag it true
+		// if flag {
+		// 	logrus.Info("The flag is: ", flag)
+		// 	if err := server.OsClient.CreateNewStory(fileData, newPath); err != nil {
+		// 		return err
+		// 	}
+		// 	flag = false
+		// }
 
 		info = fileData
 
@@ -106,7 +111,6 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 	}
 
 	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Upload received with success", Code: pb.UploadStatusCode_Ok})
-
 	if err != nil {
 		server.logger.Errorf("failed to send status code, error: %v", err)
 		return
