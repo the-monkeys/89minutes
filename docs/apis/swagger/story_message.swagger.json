@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "comment_message.proto",
+    "title": "story_message.proto",
     "version": "version not set"
   },
   "consumes": [
@@ -15,21 +15,15 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "type_url": {
+        "@type": {
           "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
         }
-      }
+      },
+      "additionalProperties": {}
     },
-    "runtimeError": {
+    "rpcStatus": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string"
-        },
         "code": {
           "type": "integer",
           "format": "int32"

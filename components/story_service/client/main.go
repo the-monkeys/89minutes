@@ -45,6 +45,7 @@ func main() {
 
 type uploader struct {
 	id          string
+	Title       string
 	dir         string
 	client      pb.StoryServiceClient
 	ctx         context.Context
@@ -59,6 +60,7 @@ type uploader struct {
 func NewUploader(ctx context.Context, client pb.StoryServiceClient, dir string, id string) *uploader {
 	d := &uploader{
 		id:          id,
+		Title:       "The app is being tested",
 		ctx:         ctx,
 		client:      client,
 		dir:         dir,
@@ -134,8 +136,10 @@ func (d *uploader) worker(workerID int) {
 			if firstChunk {
 				err = streamUploader.Send(&pb.UploadStoryAndFilesReq{
 					Id:       d.id,
+					Title:    d.Title,
 					Content:  buf[:n],
 					Filename: request,
+					Author:   "89minutes",
 				})
 				firstChunk = false
 			} else {

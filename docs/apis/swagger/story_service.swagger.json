@@ -4,6 +4,11 @@
     "title": "story_service.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "StoryService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -11,38 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/v1/89minutes/create": {
-      "post": {
-        "operationId": "StoryService_Create",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/CreateStoryResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/CreateStoryRequest"
-            }
-          }
-        ],
-        "tags": [
-          "StoryService"
-        ]
-      }
-    },
     "/v1/89minutes/ping": {
       "post": {
         "operationId": "StoryService_PingPong",
@@ -56,7 +29,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/runtimeError"
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -74,33 +47,42 @@
           "StoryService"
         ]
       }
+    },
+    "/v1/89minutes/story": {
+      "post": {
+        "operationId": "StoryService_UploadStoryAndFiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UploadStoryAndFilesRes"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": " (streaming inputs)",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UploadStoryAndFilesReq"
+            }
+          }
+        ],
+        "tags": [
+          "StoryService"
+        ]
+      }
     }
   },
   "definitions": {
-    "CreateStoryRequest": {
-      "type": "object",
-      "properties": {
-        "story": {
-          "$ref": "#/definitions/Story"
-        }
-      }
-    },
-    "CreateStoryResponse": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "GetLatestStoryResponse": {
-      "type": "object",
-      "properties": {
-        "story": {
-          "$ref": "#/definitions/Story"
-        }
-      }
-    },
     "Ping": {
       "type": "object",
       "properties": {
@@ -117,43 +99,44 @@
         }
       }
     },
-    "Story": {
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "tagName": {
+          "type": "string"
+        }
+      }
+    },
+    "UploadStatusCode": {
+      "type": "string",
+      "enum": [
+        "Unknown",
+        "Ok",
+        "Failed"
+      ],
+      "default": "Unknown"
+    },
+    "UploadStoryAndFilesReq": {
       "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "title": "UUID"
+          "type": "string"
         },
         "title": {
+          "type": "string"
+        },
+        "Content": {
           "type": "string",
-          "title": "Title of the story"
+          "format": "byte"
         },
-        "textContent": {
-          "type": "string",
-          "title": "Text contents"
+        "Filename": {
+          "type": "string"
         },
-        "fileContent": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "byte"
-          },
-          "title": "Story can have multiple images and videos"
-        },
-        "formattedText": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Story can have formatted texts, like code"
-        },
-        "WrittenBy": {
-          "type": "string",
-          "title": "Name of the author"
+        "Author": {
+          "type": "string"
         },
         "isDraft": {
-          "type": "boolean",
-          "title": "Is the story draft and not published"
+          "type": "boolean"
         },
         "Tag": {
           "type": "array",
@@ -174,71 +157,34 @@
         }
       }
     },
-    "Tag": {
+    "UploadStoryAndFilesRes": {
       "type": "object",
       "properties": {
-        "tagName": {
+        "Message": {
           "type": "string"
-        }
-      }
-    },
-    "UpdateStoryResponse": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "UUID"
+        },
+        "Code": {
+          "$ref": "#/definitions/UploadStatusCode"
         }
       }
     },
     "protobufAny": {
       "type": "object",
       "properties": {
-        "type_url": {
+        "@type": {
           "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
         }
-      }
+      },
+      "additionalProperties": {}
     },
-    "runtimeError": {
+    "rpcStatus": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string"
-        },
         "code": {
           "type": "integer",
           "format": "int32"
         },
         "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
-    },
-    "runtimeStreamError": {
-      "type": "object",
-      "properties": {
-        "grpc_code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "http_code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "http_status": {
           "type": "string"
         },
         "details": {

@@ -4,6 +4,7 @@ option go_package=".;pb";
 
 import "story_message.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 
 message CreateStoryRequest{
     Story story = 1;
@@ -23,8 +24,17 @@ message Pong {
 
 message UploadStoryAndFilesReq {
     string id = 1;
-    bytes Content = 2;
-    string Filename = 3;
+    string title =2;
+    bytes Content = 3;
+    string Filename = 4;
+    string Author = 5;
+    bool isDraft = 7;
+    // Tags for categorizing stories
+    repeated Tag Tag = 8;
+    // Create time
+    google.protobuf.Timestamp createTime = 9;
+    // Update time
+    google.protobuf.Timestamp updateTime = 10;
 }
 
 message UploadStoryAndFilesRes {
