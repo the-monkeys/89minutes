@@ -1,9 +1,9 @@
 package osstore
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/89minutes/89minutes/pb"
@@ -32,18 +32,14 @@ func NewOsClient(client *opensearch.Client) *OsClient {
 	}
 }
 
-func (client *OsClient) CreateNewStory(ip *pb.UploadStoryAndFilesReq, filePath string) error {
-	story := NewStory(ip, filePath)
+func (client *OsClient) CreateNewStory(ip *pb.UploadStoryAndFilesReq, filePath string, index string) error {
+	story := StoryToString(ip, filePath)
+	// logrus.Info("Story: ", story)
 
-	byteSlice, err := json.Marshal(&story)
-	if err != nil {
-		return err
-	}
-
-	document := bytes.NewReader(byteSlice)
+	document := strings.NewReader(story)
 
 	req := opensearchapi.IndexRequest{
-		Index:      "go-test-index1",
+		Index:      index,
 		DocumentID: ip.Id,
 		Body:       document,
 	}
@@ -58,13 +54,13 @@ func (client *OsClient) CreateNewStory(ip *pb.UploadStoryAndFilesReq, filePath s
 	return nil
 }
 
-func NewStory(ip *pb.UploadStoryAndFilesReq, filePath string) Story {
-	return Story{
-		id:         ip.Id,
-		title:      ip.Title,
-		author:     ip.Author,
-		filepath:   filePath,
-		isDraft:    ip.IsDraft,
-		created_at: time.Now(),
-	}
+func StoryToString(ip *pb.UploadStoryAndFilesReq, filePath string) string {
+	return fmt.Sprintf(`{
+		"id":         "%s",
+		"title":      "%s",
+		"author":     "%s",
+		"filepath":   "%s",
+		"isDraft":    "%v",
+		"created_at": "%v"
+	}`, ip.Id, ip.Title, ip.Author, filePath, ip.IsDraft, time.Now())
 }
