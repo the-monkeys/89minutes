@@ -48,7 +48,6 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 	var fp *os.File
 	var fileData *pb.UploadStoryAndFilesReq
 	var filename string
-	// var flag = true
 
 	var info *pb.UploadStoryAndFilesReq
 
@@ -98,6 +97,11 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 			stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Unable to write chunk of filename :" + fileData.Filename, Code: pb.UploadStatusCode_Failed})
 			return
 		}
+
+		// Store into the opensearch db only once
+		if err := server.OsClient.CreateNewStory(info, newPath, storyIndex); err != nil {
+			return err
+		}
 	}
 
 	err = stream.SendAndClose(&pb.UploadStoryAndFilesRes{Message: "Upload received with success", Code: pb.UploadStatusCode_Ok})
@@ -109,12 +113,6 @@ func (server *StoryService) UploadStoryAndFiles(stream pb.StoryService_UploadSto
 
 	server.logger.Infof("Successfully received and stored the file: %s, in  dir: %s", filename, server.storyDir)
 
-	//
-	//  This needs to be changed
-	//
-	if err := server.OsClient.CreateNewStory(info, "newPath"); err != nil {
-		return err
-	}
 	return nil
 }
 
