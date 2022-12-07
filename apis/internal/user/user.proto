@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+
+message CreateUserAccReq {
+    string id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string email = 4;
+    string password = 5;
+}
+
+message CreateUserAccResp {
+    string id = 1;
+    string message = 2;
+}
+
+
+service UserService {
+    rpc CreateUserAcc(CreateUserAccReq) returns (CreateUserAccResp) {};
+}

@@ -2,8 +2,8 @@ syntax = "proto3";
 
 option go_package=".;pb";
 
-import "story_message.proto";
-import "google/api/annotations.proto";
+import "proto/story_message.proto";
+import "proto/google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 message CreateStoryRequest{
